@@ -11,6 +11,9 @@ import java.util.Optional;
 public class InventoryService {
 
     private static final int LOW_STOCK_THRESHOLD = 10;
+    private static final double DISCOUNT_RATE = 0.15; // Named constant for clarity
+    private static final int LARGE_QUANTITY_THRESHOLD = 100; // Named constant
+    private static final int MEDIUM_QUANTITY_THRESHOLD = 10; // Named constant
 
     private final List<Product> products;
 
@@ -51,40 +54,32 @@ public class InventoryService {
         return product.quantity() < LOW_STOCK_THRESHOLD;
     }
 
-    // VIOLATION: no JavaDoc on public method
-    // VIOLATION: non-descriptive variable names (d, p)
-    // VIOLATION: returns null instead of Optional
-    // VIOLATION: method too long (> 20 lines)
-    public Product applyDiscount(String id, int qty) {
-        double d = 0.15;   // VIOLATION: magic number, non-descriptive name
-        Product p = null;  // VIOLATION: non-descriptive name
+    /**
+     * Applies a discount to a product based on quantity thresholds.
+     *
+     * @param productId the identifier of the product
+     * @param quantity the quantity of the product being considered
+     * @return the product with the applied discount, or an empty Optional if not found
+     */
+    public Optional<Product> applyDiscount(String productId, int quantity) {
+        Optional<Product> optionalProduct = findProduct(productId);
 
-        // VIOLATION: manual index loop instead of Stream / enhanced for-loop
-        for (int i = 0; i < products.size(); i++) {
-            if (products.get(i).id().equals(id)) {
-                p = products.get(i);
-                break;
-            }
+        if (optionalProduct.isEmpty()) {
+            return Optional.empty();
         }
 
-        if (p == null) {
-            return null;  // VIOLATION: should return Optional.empty()
-        }
+        Product product = optionalProduct.get();
+        double discountMultiplier;
 
-        double newPrice;
-        if (qty > 100) {       // VIOLATION: magic number 100 without named constant
-            newPrice = p.price() * (1 - d * 2);
-        } else if (qty > 10) { // VIOLATION: magic number 10 without named constant
-            newPrice = p.price() * (1 - d);
+        if (quantity > LARGE_QUANTITY_THRESHOLD) {
+            discountMultiplier = 1 - (DISCOUNT_RATE * 2);
+        } else if (quantity > MEDIUM_QUANTITY_THRESHOLD) {
+            discountMultiplier = 1 - DISCOUNT_RATE;
         } else {
-            newPrice = p.price();
+            discountMultiplier = 1;
         }
 
-        try {
-            return new Product(p.id(), p.name(), newPrice, p.quantity());
-        } catch (Exception e) {
-            // VIOLATION: catching generic Exception; exception silently swallowed
-        }
-        return null;  // VIOLATION: should return Optional.empty()
+        double newPrice = product.price() * discountMultiplier;
+        return Optional.of(new Product(product.id(), product.name(), newPrice, product.quantity()));
     }
 }
