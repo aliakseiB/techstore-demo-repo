@@ -47,30 +47,34 @@ def group_by_product(sales: List[SaleRecord]) -> Dict[str, float]:
     return result
 
 
-# VIOLATION: camelCase function name â€” must be snake_case
-# VIOLATION: no docstring
-# VIOLATION: no type hints on parameters or return value
-def calculateProductSummary(sales, productId):
-    total = 0
-    names = ""
-    # VIOLATION: range(len(...)) instead of direct iteration or enumerate
-    for i in range(len(sales)):
-        if sales[i].product_id == productId:
-            total = total + sales[i].total
-            # VIOLATION: string concatenation in a loop (use join())
-            names = names + sales[i].product_id + ", "
+def calculate_product_summary(sales: List[SaleRecord], product_id: str) -> float:
+    """
+    Calculate the total sales and product ID summary for a specific product.
+
+    Args:
+        sales (List[SaleRecord]): List of sales records.
+        product_id (str): The ID of the product to summarize.
+
+    Returns:
+        float: The total sales value for the given product ID.
+    """
+    total = sum(sale.total for sale in sales if sale.product_id == product_id)
     return total
 
+def process_sales(sales: List[SaleRecord], discount_rate: float, threshold: float) -> float:
+    """
+    Process sales data with discounts and threshold.
 
-# VIOLATION: 8 parameters â€” far above the 3-4 limit
-# VIOLATION: single-letter / non-descriptive parameter names (s, d, r, t, n, m)
-# VIOLATION: no docstring
-# VIOLATION: no type hints
-def process(s, d, r, t, n, m, extra_param_1, extra_param_2):
+    Args:
+        sales (List[SaleRecord]): The sales records to process.
+        discount_rate (float): The discount rate to apply.
+        threshold (float): The maximum allowable value.
+
+    Returns:
+        float: Processed sales value.
+    """
     try:
-        result = s * d / r
-        if result > t:
-            result = t
-    except:  # VIOLATION: bare except â€” must catch specific exception type
-        result = 0
-    return result
+        result = sum(sale.total for sale in sales) * discount_rate
+        return min(result, threshold)
+    except ZeroDivisionError:
+        return 0
